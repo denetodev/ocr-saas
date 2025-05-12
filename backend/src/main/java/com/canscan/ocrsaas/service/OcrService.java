@@ -3,6 +3,10 @@ package com.canscan.ocrsaas.service;
 import com.canscan.ocrsaas.exception.OcrProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.sourceforge.tess4j.ITesseract;
+import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -14,25 +18,27 @@ import java.nio.file.Path;
 public class OcrService {
     private final FileStorageService fileStorageService;
 
-    // Este é um placeholder. Na implementação real, você integraria com Tesseract
+    @Value("${app.ocr.data-path:./tessdata}")
+    private String tessdataPath;
+
     public String performOcr(String filePath) {
         try {
             Path path = fileStorageService.getFilePath(filePath);
             File imageFile = path.toFile();
 
-            // Placeholder para a chamada real do Tesseract
             log.info("Performing OCR on file: {}", imageFile.getAbsolutePath());
 
-            // Na implementação real, você usaria algo como:
-            // Tesseract tesseract = new Tesseract();
-            // tesseract.setDatapath("/path/to/tessdata");
-            // String text = tesseract.doOCR(imageFile);
+            ITesseract tesseract = new Tesseract();
+            tesseract.setDatapath(tessdataPath);
+            tesseract.setLanguage("eng"); // Set language to English
 
-            // Por enquanto, retornamos um texto de exemplo
-            return "This is a placeholder for OCR extracted text. In a real implementation, " +
-                    "this would be the actual text extracted from the image using Tesseract.";
+            // You can set other Tesseract parameters here
+            // tesseract.setPageSegMode(1);
+            // tesseract.setOcrEngineMode(1);
 
-        } catch (Exception e) {
+            return tesseract.doOCR(imageFile);
+
+        } catch (TesseractException e) {
             throw new OcrProcessingException("Failed to process OCR for file: " + filePath, e);
         }
     }
